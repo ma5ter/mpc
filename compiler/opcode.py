@@ -58,7 +58,16 @@ def optimize(code: list[OP]) -> list[OP]:
 		nxt2 = code[i + 2] if i < len(code) - 2 else None
 		# remove NOPs
 		if isinstance(nxt, NOP):
-			nxt.move_anchor_to(curr)
+			try:
+				nxt.move_anchor_to(curr)
+			except Anchor.CollisionError:
+				keep = cast(Anchor, curr.anchor)
+				remove = cast(Anchor, nxt.anchor)
+				for c in code:
+					if isinstance(c, BranchOP):
+						bra = cast(BranchOP, c)
+						if bra.target == remove:
+							bra.target = keep
 			skip = 1
 		# check for increment
 		elif isinstance(nxt2, ADD):
@@ -114,7 +123,6 @@ def optimize_branches(code: list[OP]) -> list[OP]:
 					if offset < 2:
 						raise ValueError("offset too small")
 					offset -= 2
-				# TODO: check offset when negative
 				# remove previous load complements
 				while (address > 0 and isinstance(code[address - 1], LoadComplementary)
 				and cast(LoadComplementary, code[address - 1]).complement == op):
@@ -130,9 +138,27 @@ def optimize_branches(code: list[OP]) -> list[OP]:
 						else:
 							op.offset = op.mask
 							offset -= op.mask
+					else:
+						# replace opcode with a jump back instruction and positive offset saving one byte
+						jmb = JMB(op.target, op.source)
+						op.move_anchor_to(jmb)
+						code[address] = op = jmb
 				# add complements
-				for psh in PSH(offset, op.source, op).expand():
-					code.insert(address, psh)
+				psh:List[OP] = []
+				if offset < 0:
+					# extend offset when negative
+					prev = 0
+					curr = 1
+					while prev != curr:
+						psh = PSH(offset - curr + 1, op.source, op).expand()
+						if isinstance(op, JMB):
+							psh.pop()  # remove the last NEG instruction
+						prev = curr
+						curr = len(psh)
+				else:
+					psh = PSH(offset, op.source, op).expand()
+				for p in psh:
+					code.insert(address, p)
 					address += 1
 			address += 1
 	return code
@@ -338,6 +364,11 @@ class JMP(BranchOP):
 		return self.append_source(f"{type(self).__name__} {self.target} <{self.offset}>")
 
 
+class JMB(BranchOP):
+	def __init__(self, target: Anchor, source: str | None = None):
+		super().__init__(0b10110111, 0, target, source)
+
+
 # COMPARE-BRANCH OPERATIONS
 
 class BZE(BranchOP):
@@ -422,11 +453,6 @@ class IOR(OP):
 class XOR(OP):
 	def __init__(self, source: str | None = None):
 		super().__init__(0b10101111, 0, source)
-
-
-class SWP(OP):
-	def __init__(self, source: str | None = None):
-		super().__init__(0b10110111, 0, source)
 
 
 # UNARY OPERATIONS

@@ -397,7 +397,8 @@ class Compiler(ast.NodeVisitor):
 	def visit_Constant(self, node: ast.Constant) -> List[OP]:
 		# this is an unnamed const visitor
 		# NOTE: the only context for constant is a load
-		return self._constant_value(node.value, self._source_line(node))
+		# NOTE: bool will be converted to 1 or 0 using python rule automatically
+		return self._constant_value(int(node.value), self._source_line(node))
 
 	def visit_Name(self, node: ast.Name):
 		if self.function.variables is None:
@@ -461,16 +462,26 @@ class Compiler(ast.NodeVisitor):
 		return result
 
 	def visit_While(self, node: ast.While) -> List[OP]:
-		result, anchor, bra = self._get_test_code(node)
 		if node.orelse:
 			raise self._unsupported(node, "while else")
+		if isinstance(node.test, ast.Constant):
+			if not cast(ast.Constant, node.test).value:
+				raise self._syntax(node, "condition is always False")
+			# no branch is generated for the infinite loop
+			anchor = None
+			result = self._get_code(node.body)
+		else:
+			result, anchor, bra = self._get_test_code(node)
 		loop_anchor = Anchor()
 		loop_anchor.place_to(NOP())
 		jmp = JMP(loop_anchor, self._source_line(node))
-		anchor.place_to(jmp)
+		if anchor is not None:
+			anchor.place_to(jmp)
 		return [loop_anchor.op] + result + [jmp]
 
 	def visit_If(self, node: ast.If) -> List[OP]:
+		if isinstance(node.test, ast.Constant):
+			raise self._syntax(node, f"condition is always {cast(ast.Constant, node.test).value}")
 		source = self._source_line(node)
 		result, anchor, bra = self._get_test_code(node)
 		if node.orelse:

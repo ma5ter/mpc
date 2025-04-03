@@ -4,6 +4,7 @@ from typing import List, Dict, cast
 
 import compiler.abstract
 
+
 class Entity(compiler.abstract.Entity):
 	def __init__(self):
 		self.refcount: int = 1
@@ -12,8 +13,13 @@ class Entity(compiler.abstract.Entity):
 		self.refcount += 1
 		return
 
+
 class Anchor(Entity):
 	count = 0
+
+	class CollisionError(Exception):
+		def __init__(self) -> None:
+			super().__init__()
 
 	def __init__(self) -> None:
 		super().__init__()
@@ -24,7 +30,7 @@ class Anchor(Entity):
 	def place_to(self, op):
 		self.op = op
 		if op.anchor is not None:
-			raise RuntimeError('anchor collision')
+			raise Anchor.CollisionError()
 		op.anchor = self
 
 	def __str__(self):
@@ -123,8 +129,7 @@ class Function(Named, Stackable):
 		def get_variables(self) -> Dict[str, Variable]:
 			return self.variables
 
-	def __init__(self, name: str, params: List[str], block: List[ast.AST] | int | None = None,
-				 sys_lib_index: int | None = None) -> None:
+	def __init__(self, name: str, params: List[str], block: List[ast.AST] | int | None = None, sys_lib_index: int | None = None) -> None:
 		Named.__init__(self, name)
 		Stackable.__init__(self)
 		# start counting only from the first call, not upon construction
