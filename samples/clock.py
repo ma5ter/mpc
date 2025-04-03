@@ -1,10 +1,15 @@
 from _builtins import *
 
+TIMEZONE_OFFSET = 3 * 60 * 60
+
+
 def main():
-	year, month, date = get_date()
-	hour, minute, second = get_realtime()
-	weekday = get_weekday()
-	print(year, month, date, hour, minute, second, weekday + 1)
-	sleep(1000)
+	while True:
+		year, month, date = get_date(TIMEZONE_OFFSET)
+		hour, minute, second = get_realtime(TIMEZONE_OFFSET)
+		weekday = get_weekday(TIMEZONE_OFFSET)
+		print(year, month, date, hour, minute, second, weekday)
+		sleep(1000)
+
 
 main()

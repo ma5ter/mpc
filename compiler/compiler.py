@@ -11,6 +11,7 @@ MAX_ADDRESS = 0xFFFF
 MAX_CONSTANT = 0xFFFFFFFF
 MAX_RETURNS = 0xF
 
+
 class ConstantDigger(ast.NodeVisitor):
 	def __init__(self, node: ast.AST, hint: dict[str: NamedConstant] | None = None) -> None:
 		super().__init__()

@@ -161,6 +161,13 @@ def optimize_branches(code: list[OP]) -> list[OP]:
 					code.insert(address, p)
 					address += 1
 			address += 1
+	# remove the very first nop in main
+	if len(code) > 1 and isinstance(code[0], NOP):
+		nop = code.pop(0)
+		op = code[0]
+		op.entry_point = nop.entry_point
+		assert nop.anchor is not None
+		print(f"note: {nop.anchor} is at addrss 0")
 	return code
 
 
