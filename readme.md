@@ -1,3 +1,5 @@
+[![Binary build](https://github.com/ma5ter/mpc/actions/workflows/build-binary.yml/badge.svg?branch=master)](https://github.com/ma5ter/mpc/actions/workflows/build-binary.yml)
+
 # Micro/MCU Python Compiler (mpc)
 
 This is a custom compiler designed for the custom 8-bit SCAMP2 virtual machine. The compiler translates Python source
@@ -49,7 +51,8 @@ The compiler supports the following Python features:
                                # but same instructions number
   ```
 
-- **Basic Arithmetic Operations on Variables**: Operations such as addition, subtraction, multiplication, integer division and power
+- **Basic Arithmetic Operations on Variables**: Operations such as addition, subtraction, multiplication, integer
+  division and power
   ```python
   x = a + 5
   y = 10 - x
@@ -83,7 +86,8 @@ The compiler supports the following Python features:
   sleep(1000)  # Assuming sleep is a surrogate that translates into the SLP opcode
   ```
 
-- **Function Returns**: Function may have no return statement, empty return statement, return one variable or even tuple.
+- **Function Returns**: Function may have no return statement, empty return statement, return one variable or even
+  tuple.
   ```python
   def foo():
       print(1)
