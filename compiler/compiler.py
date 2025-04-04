@@ -215,7 +215,7 @@ class Compiler(ast.NodeVisitor):
 				value = cast(ast.Expr, _).value
 				if not isinstance(value, ast.Call) or cast(ast.Name, cast(ast.Call, value).func).id != 'main':
 					raise self._unsupported(_,
-											'expressions other than "main()" are not supported in the module body')
+						'expressions other than "main()" are not supported in the module body')
 			else:
 				raise self._unsupported(_, 'only global assignments and functions are supported')
 
@@ -519,14 +519,14 @@ class Compiler(ast.NodeVisitor):
 			raise self._syntax(target, "target is not a Name")
 		# same as assign with binary operation but need a load context for the target variable
 		load = ast.Name(target.id, ast.Load(),
-						col_offset=node.col_offset, end_col_offset=node.end_col_offset,
-						end_lineno=node.end_lineno, lineno=node.lineno)
+			col_offset=node.col_offset, end_col_offset=node.end_col_offset,
+			end_lineno=node.end_lineno, lineno=node.lineno)
 		bin_op = ast.BinOp(load, node.op, node.value,
-						   col_offset=node.col_offset, end_col_offset=node.end_col_offset,
-						   end_lineno=node.end_lineno, lineno=node.lineno)
+			col_offset=node.col_offset, end_col_offset=node.end_col_offset,
+			end_lineno=node.end_lineno, lineno=node.lineno)
 		assign = ast.Assign([target], bin_op, None,
-							col_offset=node.col_offset, end_col_offset=node.end_col_offset,
-							end_lineno=node.end_lineno, lineno=node.lineno)
+			col_offset=node.col_offset, end_col_offset=node.end_col_offset,
+			end_lineno=node.end_lineno, lineno=node.lineno)
 		return self.visit_Assign(assign)
 
 	def visit_BinOp(self, node: ast.BinOp) -> List[OP]:
@@ -629,7 +629,7 @@ class Compiler(ast.NodeVisitor):
 		constants_size = len(self.cd.values())
 		if constants_size > 0xFF:
 			raise Compiler.CompilationError('number of constants > 255')
-		content = [MIN_VM_VERSION, functions_size, constants_size, self.main_variables_count]
+		content: List[int] = []
 		for function in self.functions.values():
 			flags = 0
 			# ADDRESS FIELD, depending on the MAX_ADDRESS
@@ -657,5 +657,5 @@ class Compiler(ast.NodeVisitor):
 			content += self._int_to_bin(const.value, MAX_CONSTANT)
 		content += [op.get_instruction() for op in self.code]
 		size = len(content)
-		content = self._int_to_bin(size, MAX_ADDRESS) + content
+		content = ([MIN_VM_VERSION] + self._int_to_bin(size, MAX_ADDRESS) + [functions_size, constants_size, self.main_variables_count] + content)
 		return bytes(content)
