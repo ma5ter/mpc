@@ -2,8 +2,9 @@
 
 # Micro/MCU Python Compiler (mpc)
 
-This is a custom compiler designed for the custom 8-bit SCAMP2 virtual machine. The compiler translates Python source
-code into bytecode that can be executed by the SCAMP2 virtual machine.
+This is a custom compiler designed for the custom 8-bit SCAMP2 virtual machine.
+The compiler translates Python source code into bytecode that can be executed by the SCAMP2 virtual machine which can be implemented, for example,
+using [Portable Virtual Machine](https://github.com/ma5ter/pvm).
 
 This compiler is very limited and intended to produce executable code for simple automation scripts that can be run in
 every MCU with at least **1.5-2 kb** of ROM and few bytes of RAM.
@@ -29,7 +30,7 @@ The compiler supports the following Python features:
   d = ((MAX_VALUE - MIN_VALUE) / 10) << 2
   ```
 
-- **Enums**: Support for well-known enums extracted from the system `_builtins.py` mockup by the `sysdeps_gen.py` tool.
+- **Enums**: Support for well-known enums extracted from the system `_builtins.py` mockup by the `descriptor_gen.py` tool.
   ```python
   class Color(Enum):
       RED = 1
@@ -218,19 +219,19 @@ ma5ter
 
 # Tools
 
-## sysdeps_gen.py
+## descriptor_gen.py
 
 Builtins Parser Utility
 
-This utility is designed to parse a `_builtins.py` file and generate a `_system_dependent.py` file for the compiler,
+This utility is designed to parse a `_builtins.py` file and generate a device descriptor YAML file for the compiler,
 containing information about the built-in functions and enums defined in the input file. The generated file includes
-details about the function arguments, return values, and enum values. Function position in an outpot list corresponds
-it system index to call.
+details about the function arguments, return values, and enum values. Function position in an output list corresponds
+its system index to call.
 
 ### Features
 
 - Parses Python `_builtins.py` file to extract built-in functions and enums.
-- Generates a `_system_dependent.py` file with the extracted information.
+- Generates a device descriptor YAML file with the extracted information.
 - Handles enums that inherit from the `Enum` class.
 - Supports functions with variable arguments and return values.
 - Ignores surrogate functions like `sleep`.
@@ -244,14 +245,14 @@ it system index to call.
 To use this utility, run the script from the command line with the path to the `_builtins.py` file as an argument:
 
 ```sh
-python sysdeps_gen.py <path_to_builtins.py>
+python descriptor_gen.py <path_to_builtins.py>
 ```
 
 Replace `<path_to_builtins.py>` with the actual path to your `_builtins.py` file.
 
 ### Output
 
-The script will generate and print the contents of `_system_dependent.py` to the standard output. The generated file
+The script will generate and print the contents of a device descriptor YAML to the standard output. The generated file
 will contain:
 
 - `WELL_KNOWN_ENUMS`: A dictionary of enums with their names and values.
@@ -281,19 +282,20 @@ def subtract(a, b):
 
 Running the utility will generate the following output:
 
-```python
-WELL_KNOWN_ENUMS = {
-	"Color": {
-		"RED": 1,
-		"GREEN": 2,
-		"BLUE": 3,
-	},
-}
+```yaml
+WELL_KNOWN_ENUMS:
+  Color:
+    RED: 1
+    GREEN: 2
+    BLUE: 3
 
-BUILTIN_FUNCTIONS = [
-	('add', ['a', 'b'], 1),
-	('subtract', ['a', 'b'], 1),
-]
+BUILTIN_FUNCTIONS:
+  add:
+    args: [ 'a', 'b' ]
+    rets: 1
+  subtract:
+    args: [ 'a', 'b' ]
+    rets: 1
 ```
 
 ### Limitations

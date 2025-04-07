@@ -18,9 +18,6 @@ def substitute(path: str, file_name: str, output):
 			for line in file:
 				if line.startswith('import compiler.abstract'):
 					continue
-				if line.startswith('from _system_dependent import *'):
-					substitute(path, '_system_dependent.py', output)
-					continue
 				match = re.search(pat_abstract, line)
 				if match:
 					line = f"class {match.group(1)}:\n"

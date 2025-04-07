@@ -1,0 +1,49 @@
+WELL_KNOWN_ENUMS:
+  AlarmState:
+    DISARMED: 0
+    ARMED: 1
+    ALARMING: 2
+  Action:
+    ACTION_OFF: 0
+    ACTION_DISARM: 0
+    ACTION_ON: 1
+    ACTION_ARM: 1
+    ACTION_EXIT: 2
+    ACTION_ENTRY: 3
+    ACTION_ALARM: 4
+    ACTION_KTS_CHECK_START: 5
+    ACTION_KTS_CHECK_SUCCESS: 6
+    ACTION_KTS_CHECK_FAIL: 7
+    ACTION__ONCE: 128
+
+BUILTIN_FUNCTIONS:
+  print:
+    args: ['*']
+    rets: 0
+  output:
+    args: ['action']
+    rets: 0
+  get_tick:
+    args: []
+    rets: 1
+  get_time:
+    args: []
+    rets: 1
+  get_realtime:
+    args: ['timezone_offset']
+    rets: 3
+  get_date:
+    args: ['timezone_offset']
+    rets: 3
+  get_weekday:
+    args: ['timezone_offset']
+    rets: 1
+  sh_get_entry_timer:
+    args: []
+    rets: 1
+  sh_get_exit_timer:
+    args: []
+    rets: 1
+  sh_section_state:
+    args: ['section_number']
+    rets: 1

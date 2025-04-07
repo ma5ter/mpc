@@ -1,7 +1,6 @@
 import ast
 from typing import Tuple
 
-from _system_dependent import *
 from compiler.console import *
 from compiler.opcode import *
 from compiler.constant import *
@@ -10,6 +9,9 @@ MIN_VM_VERSION = 1
 MAX_ADDRESS = 0xFFFF
 MAX_CONSTANT = 0xFFFFFFFF
 MAX_RETURNS = 0xF
+
+WELL_KNOWN_ENUMS = {}
+BUILTIN_FUNCTIONS = []
 
 
 class ConstantDigger(ast.NodeVisitor):

@@ -51,9 +51,9 @@ class Visitor(ast.NodeVisitor):
 		if function_name in SURROGATES:
 			return
 		for arg in node.args.args:
-			function_args.append(f"'{arg.arg}'")
+			function_args.append(f"{arg.arg}")
 		if node.args.vararg:
-			function_args.append("'*'")
+			function_args.append("*")
 		for item in node.body:
 			if isinstance(item, ast.Return):
 				ret = cast(ast.Return, item)
@@ -66,35 +66,33 @@ class Visitor(ast.NodeVisitor):
 				if function_returns is not None and function_returns != returns:
 					raise SyntaxError("Different return size")
 				function_returns = returns
-		self.functions[function_name] = function_args, function_returns
+		self.functions[function_name] = (function_args, function_returns if function_returns is not None else 0)
 
 
 def main():
 	if len(sys.argv) < 2:
-		print(f"Usage: {sys.argv[0]} <_builtins.py>\n\n\tGenerates _system_dependent.py by the supplied _builtins.py")
-		sys.exit(1)
+		print(f"Usage: {sys.argv[0]} <_builtins.py>\n\n\tGenerates device descriptor by the supplied _builtins.py")
+		return 1
 	with open(sys.argv[1], 'r') as f:
 		v = Visitor()
 		try:
 			v.visit(ast.parse(f.read()))
 		except SyntaxError as e:
 			print(e)
-			sys.exit(1)
+			return 1
 		if v.enums:
-			print('WELL_KNOWN_ENUMS = {')
+			print("WELL_KNOWN_ENUMS:")
 			for enum_name, enum_content in v.enums.items():
-				print(f'\t"{enum_name}": {{')
+				print(f"  {enum_name}:")
 				for name, value in enum_content.items():
-					print(f'\t\t"{name}": {value},')
-				print('\t},')
-			print('}')
+					print(f"    {name}: {value}")
+			print()
 		if v.functions:
-			print('BUILTIN_FUNCTIONS = [')
+			print("BUILTIN_FUNCTIONS:")
 			for function_name, (function_args, function_returns) in v.functions.items():
-				if function_returns is None:
-					function_returns = 0
-				print(f"\t('{function_name}', [{','.join(function_args)}], {function_returns}),")
-			print(']')
+				print(f"  {function_name}:")
+				print(f"    args: {function_args}")
+				print(f"    rets: {function_returns}")
 
 
 if __name__ == '__main__':
