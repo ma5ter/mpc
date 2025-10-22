@@ -12,7 +12,7 @@ def parse_arguments(substitutions) -> str | argparse.Namespace:
 	parser.add_argument('--file', '-f', help='Input source file')
 	parser.add_argument('--output', '-o', help='Output binary file')
 	parser.add_argument('--define', '-d', action='append', help='Define a constant')
-	parser.add_argument('--descriptor', '-x', default='device.yaml', help='Device descriptor (unused/ignored)')
+	parser.add_argument('--descriptor', '-x', default='device.yaml', help='Device descriptor')
 	parser.add_argument('--verbose', '-v', action='store_true', help='Enable verbose output')
 	parser.add_argument('files', nargs='*', help='Another way to specify input and output files as positional arguments or a complementary argument if supplied only one')
 	args = parser.parse_args()
@@ -88,7 +88,3 @@ def main():
 
 if __name__ == '__main__':
 	main()
-
-# print(ast.dump(tree, indent=2))
-# exe = compile(tree, source_code, 'exec')
-# dis.dis(exe, depth=999)

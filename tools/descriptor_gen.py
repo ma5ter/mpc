@@ -93,6 +93,7 @@ def main():
 				print(f"  {function_name}:")
 				print(f"    args: {function_args}")
 				print(f"    rets: {function_returns}")
+		return 0
 
 
 if __name__ == '__main__':
