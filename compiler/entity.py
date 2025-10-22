@@ -63,11 +63,12 @@ class Stackable(Entity, IStackable):
 
 class Variable(Named, Stackable):
 	def __init__(self, name: str) -> None:
+		self.tuple = 0
 		Named.__init__(self, name)
 		Stackable.__init__(self)
 
 	def __str__(self):
-		return f"var {self.name} <{self.get_index()}>"
+		return f"{'var' if self.tuple < 2 else 'tuple'} {self.name} <{self.get_index()}>"
 
 
 class UnnamedConstant(Stackable):

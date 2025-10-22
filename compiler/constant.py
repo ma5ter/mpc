@@ -11,7 +11,7 @@ class SimpleConstantResolver(ast.NodeVisitor):
 		def __init__(self, node: ast.AST, message: str):
 			super().__init__(node, "can't resolve value as constant due to " + message)
 
-	def __init__(self, node: ast.AST, hint: dict[str: NamedConstant] | None = None):
+	def __init__(self, node: ast.AST, hint: dict[str, NamedConstant] | None = None):
 		super().__init__()
 		self.hint = hint
 		self.result: int = self.visit(node)

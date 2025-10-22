@@ -238,7 +238,7 @@ class Compiler(ast.NodeVisitor):
 				raise self._unsupported(node, "global assignment redefinition")
 			if name in self.substitutions:
 				value = self.substitutions[name]
-				pp(f"NOTE: constant {name} set from {node_value.value} to {value} from command-line parameters")
+				pp(f"NOTE: constant {name} changed from {node_value.value} to {value} by command-line parameter")
 			else:
 				value = SimpleConstantResolver(node_value, self.constants).result
 				if value is None:
@@ -254,12 +254,12 @@ class Compiler(ast.NodeVisitor):
 			self.functions[name] = Function(name, args, block)
 
 		# set returns to 0 when no returns at all
-		for f in cast(List[Function], self.functions.values()):
+		for f in self.functions.values():
 			if f.returns is None:
 				f.returns = 0
 
 		# process functions
-		for f in cast(List[Function], self.functions.values()):
+		for f in self.functions.values():
 			if f.block is not None:
 				self.function = f
 				f.code = self._get_code(f.block)
@@ -271,7 +271,7 @@ class Compiler(ast.NodeVisitor):
 				index = 0
 				for v in f.variables.values():
 					v.index = index
-					index += 1
+					index += v.tuple
 				self.function = None
 
 		# remove unused constants
@@ -341,13 +341,17 @@ class Compiler(ast.NodeVisitor):
 
 	def visit_Call(self, node: ast.Call) -> List[OP]:
 		name = self._name(node.func)
-		call_args_len = len(node.args)
+		call_args_len = sum(self.function.variables[cast(ast.Name, cast(ast.Starred, x).value).id].tuple
+		if isinstance(x, ast.Starred) and isinstance(cast(ast.Starred, x).value, ast.Name)
+		else 1 for x in node.args)
 		if name in self.functions:
 			function = self.functions[name]
 			function.incref()
 			# generate some code
 			result: List[OP] = []
 			for arg in node.args:
+				if isinstance(arg, ast.Starred):
+					arg = cast(ast.Starred, arg).value
 				value = self.visit(arg)
 				result += value
 			function_args_len = len(function.params)
@@ -412,8 +416,8 @@ class Compiler(ast.NodeVisitor):
 			if name in self.function.variables:
 				variable = self.function.variables[name]
 				variable.incref()
-				self._stack_check(1)
-				return [LDV(variable, source)]
+				self._stack_check(variable.tuple)
+				return [LDV(variable, i, source) for i in range(variable.tuple)]
 			elif name in self.constants:
 				self._stack_check(1)
 				constant = self.constants[name]
@@ -447,20 +451,38 @@ class Compiler(ast.NodeVisitor):
 		target = node.targets[0]
 		targets = []
 		if isinstance(target, ast.Name):
-			targets.append(self.visit(target))
+			var = self.visit(target)
+			if isinstance(node.value, ast.Tuple):
+				size = len(node.value.elts)
+			elif isinstance(node.value, ast.Call):
+				size = self.functions[cast(ast.Name, node.value.func).id].returns
+			else:
+				size = 1
+			if var.tuple != size:
+				if var.tuple == 0:
+					var.tuple = size
+				else:
+					raise self._syntax(node, f"variable `{var.name}` was defined as a tuple-container with exactly {var.tuple} elements earlie, but here elements number assumed to be {size}")
+			targets.append(var)
 		elif isinstance(target, ast.Tuple):
 			for item in target.elts[::-1]:
 				if not isinstance(item, ast.Name):
 					raise self._syntax(node, "only variables supported for tuple assignment")
-				targets.append(self.visit(item))
+				var = self.visit(item)
+				if var.tuple != 1:
+					if var.tuple == 0:
+						var.tuple = 1
+					else:
+						raise self._syntax(node, f"variable `{var.name}` was defined as a tuple-container earlier, but here used as a single variable-container")
+				targets.append(var)
 		else:
 			raise self._syntax(node, "assignment target is not a variable or tuple")
 		result = self.visit(node.value)
 		for target in targets:
 			if not isinstance(target, Variable):
 				raise self._syntax(node, "assignment target is not a variable")
-			result += [STV(target, self._source_line(node))]
-			self._stack_check(-1)
+			result += [STV(target, i, self._source_line(node)) for i in range(target.tuple - 1, -1, -1)]
+			self._stack_check(-target.tuple)
 		result += self._stack_cleanup()
 		return result
 

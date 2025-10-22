@@ -40,7 +40,7 @@ The compiler supports the following Python features:
   color = Color.RED
   ```
 
-- **Local Variable Assignments**: Assignments to local variables or tuples of variables.
+- **Local Variable Assignments**: Assignments to local variables or tuples of variables, or tuple-variables.
   ```python
   tz = 5 * 60 * 60
   year, month, date = get_date(tz)
@@ -50,6 +50,11 @@ The compiler supports the following Python features:
   ```python
   a, b, c = 1, get_value(), 3  # will consume more stack depth than sequential assignment
                                # but same instructions number
+  ```
+  ```python
+    abc = 1, 2, 3  # will create a tuple-container, same as 3 consecutive variables
+                   # can be expanded to tuple of variables or passed with a *-syntax as parameters,
+                   # still immutable, practically useless
   ```
 
 - **Basic Arithmetic Operations on Variables**: Operations such as addition, subtraction, multiplication, integer
@@ -83,6 +88,7 @@ The compiler supports the following Python features:
 - **Function Calls**: Calls to defined functions or system-specific built-ins (and surrogates).
   ```python
   result = add(5, 3)  # Assuming add is a user-defined function
+  result = add(*ab)  # Assuming ab is a tuple-container
   print(result)  # Assuming print is a built-in function
   sleep(1000)  # Assuming sleep is a surrogate that translates into the SLP opcode
   ```

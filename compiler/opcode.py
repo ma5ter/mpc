@@ -94,7 +94,7 @@ def optimize(code: list[OP]) -> list[OP]:
 		# TODO: need more branching and calls analysis to find another store without load
 		elif isinstance(curr, STV) and isinstance(nxt, LDV) and curr.anchor is None and nxt.anchor is None:
 			stv = cast(STV, curr)
-			ldv = cast(STV, nxt)
+			ldv = cast(LDV, nxt)
 			if stv.value == ldv.value:
 				# optimized
 				curr.metadata = 'oo'
@@ -125,7 +125,7 @@ def optimize_branches(code: list[OP]) -> list[OP]:
 					offset -= 2
 				# remove previous load complements
 				while (address > 0 and isinstance(code[address - 1], LoadComplementary)
-				and cast(LoadComplementary, code[address - 1]).complement == op):
+					   and cast(LoadComplementary, cast(object, code[address - 1])).complement == op):
 					address -= 1
 					code.pop(address)
 				# JMP has own storage and may work without complements
@@ -144,7 +144,7 @@ def optimize_branches(code: list[OP]) -> list[OP]:
 						op.move_anchor_to(jmb)
 						code[address] = op = jmb
 				# add complements
-				psh:List[OP] = []
+				psh: List[OP] = []
 				if offset < 0:
 					# extend offset when negative
 					prev = 0
@@ -172,15 +172,18 @@ def optimize_branches(code: list[OP]) -> list[OP]:
 
 
 class IntegralOP(OP):
-	def __init__(self, opcode: int, mask: int, value: Any, source: str | None):
+	def __init__(self, opcode: int, mask: int, value: Any, offset: int, source: str | None):
+		if offset < 0:
+			raise ValueError("offset must be positive")
 		IntegralOP.assert_integral(value)
 		if isinstance(value, int) and not isinstance(self, PSH) and value < 0:
 			raise ValueError("value out of range")
 		super().__init__(opcode, mask, source)
 		self.value: Any = value
+		self.offset = offset
 
 	def get_value(self) -> Any:
-		return self.value.get_index() if isinstance(self.value, IStackable) else self.value
+		return IntegralOP.assert_integral(self.value) + self.offset
 
 	def get_instruction(self) -> int:
 		value = self.get_value()
@@ -215,7 +218,7 @@ class IntegralOP(OP):
 		raise TypeError("argument must be integral")
 
 	def __str__(self):
-		return self.append_source(f"{type(self).__name__} {self.value}")
+		return self.append_source(f"{type(self).__name__} {self.value}{'' if self.offset == 0 else f'+{self.offset}'}")
 
 
 class BranchOP(OP):
@@ -235,7 +238,7 @@ class LoadComplementary:
 class PSH(IntegralOP, LoadComplementary):
 	def __init__(self, value: Any, source: str | None = None, complement: OP = None):
 		LoadComplementary.__init__(self, complement)
-		IntegralOP.__init__(self, 0, 0x7F, value, source)
+		IntegralOP.__init__(self, 0, 0x7F, value, 0, source)
 
 	def expand(self) -> list[OP]:
 		value = self.get_value()
@@ -253,7 +256,7 @@ class PSH(IntegralOP, LoadComplementary):
 			count = 0
 		psh = PSH((value >> (count * 5)) & 0x7F, self.source, self.complement)
 		psh.entry_point = self.entry_point
-		result = [psh]
+		result: List[OP] = [psh]
 		while count > 0:
 			count -= 1
 			result.append(PSC((value >> (count * 5)) & 0x1F, self.source, self.complement))
@@ -309,20 +312,20 @@ class LDC(OP):
 
 
 class LDV(IntegralOP):
-	def __init__(self, value: Any, source: str | None = None):
-		super().__init__(0b11100000, 0xF, value, source)
+	def __init__(self, value: Any, offset: int = 0, source: str | None = None):
+		super().__init__(0b11100000, 0xF, value, offset, source)
 
 
 class STV(IntegralOP):
-	def __init__(self, value: Any, source: str | None = None):
-		super().__init__(0b11110000, 0xF, value, source)
+	def __init__(self, value: Any, offset: int = 0, source: str | None = None):
+		super().__init__(0b11110000, 0xF, value, offset, source)
 
 
 # CONTROL FLOW OPERATIONS
 
 class CAL(IntegralOP):
 	def __init__(self, value: Any, source: str | None = None):
-		super().__init__(0b11010000, 0xF, value, source)
+		super().__init__(0b11010000, 0xF, value, 0, source)
 
 
 class RET(OP):
@@ -483,4 +486,3 @@ class INC(OP):
 class DEC(OP):
 	def __init__(self, source: str | None = None):
 		super().__init__(0b10111011, 0, source)
-
