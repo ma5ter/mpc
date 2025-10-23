@@ -1,6 +1,5 @@
 from typing import Any
 
-import compiler.abstract
 from compiler.entity import *
 
 
@@ -167,7 +166,7 @@ def optimize_branches(code: list[OP]) -> list[OP]:
 		op = code[0]
 		op.entry_point = nop.entry_point
 		assert nop.anchor is not None
-		print(f"note: {nop.anchor} is at addrss 0")
+		print(f"note: {nop.anchor} is at address 0")
 	return code
 
 

@@ -1,4 +1,3 @@
-import ast
 import sys
 from typing import cast
 
@@ -68,8 +67,8 @@ class SimpleConstantResolver(ast.NodeVisitor):
 		pass
 
 	@staticmethod
-	def resolve(node: ast.AST, hint: dict[str: NamedConstant] | None = None) -> int | None:
+	def resolve(node: ast.AST, hint: dict[str, NamedConstant] | None = None) -> int | None:
 		try:
 			return SimpleConstantResolver(node, hint).result
-		except SimpleConstantResolver.Error as e:
+		except SimpleConstantResolver.Error:
 			return None

@@ -1,4 +1,3 @@
-import ast
 from typing import Tuple
 
 from compiler.console import *
@@ -15,7 +14,7 @@ BUILTIN_FUNCTIONS = []
 
 
 class ConstantDigger(ast.NodeVisitor):
-	def __init__(self, node: ast.AST, hint: dict[str: NamedConstant] | None = None) -> None:
+	def __init__(self, node: ast.AST, hint: dict[str, NamedConstant] | None = None) -> None:
 		super().__init__()
 		self.hint = hint
 		self.const_values: List[UnnamedConstant] = []
@@ -223,7 +222,7 @@ class Compiler(ast.NodeVisitor):
 
 		# extract all const values
 		try:
-			self.cd = ConstantDigger(module)
+			self.cd = ConstantDigger(cast(ast.AST, module))
 		except ValueError as e:
 			node = e.args[1] if len(e.args) == 2 else None
 			raise self._unsupported(node, e.args[0])
@@ -232,11 +231,15 @@ class Compiler(ast.NodeVisitor):
 		for node in globs:
 			if len(node.targets) != 1:
 				raise self._unsupported(node, "multi-target assignments")
-			node_value = cast(ast.AST, node.value)
+			if not isinstance(node.targets[0], ast.Name):
+				raise self._unsupported(node, "unnamed assignments")
 			name = self._name(node.targets[0])
+			node_value = node.value
 			if name in self.constants:
 				raise self._unsupported(node, "global assignment redefinition")
 			if name in self.substitutions:
+				if not isinstance(node_value, ast.Constant):
+					raise self._unsupported(node, "non-constant substitution")
 				value = self.substitutions[name]
 				pp(f"NOTE: constant {name} changed from {node_value.value} to {value} by command-line parameter")
 			else:
@@ -327,7 +330,7 @@ class Compiler(ast.NodeVisitor):
 
 	# noinspection PyPep8Naming
 	@staticmethod
-	def visit_NoneType(node: None) -> List[OP]:
+	def visit_NoneType() -> List[OP]:
 		return []
 
 	def visit_Expr(self, node):
@@ -674,7 +677,7 @@ class Compiler(ast.NodeVisitor):
 			if variables_size > 0xFF:
 				raise Compiler.CompilationError('number of variables > 255')
 			if function.returns > MAX_RETURNS:
-				raise Compiler.CompilationError('number of returns > 255')
+				raise Compiler.CompilationError(f'number of returns > {MAX_RETURNS}')
 			content += (self._int_to_bin(function_address, MAX_ADDRESS)
 						+ [params_size, variables_size, function.returns | flags])
 		for const in self.cd.values():
