@@ -778,7 +778,10 @@ class Compiler(ast.NodeVisitor):
 			if isinstance(node.value, ast.Tuple):
 				size = len(node.value.elts)
 			elif isinstance(node.value, ast.Call):
-				size = self.functions[cast(ast.Name, cast(ast.expr, node.value.func)).id].returns
+				name = cast(ast.Name, cast(ast.expr, node.value.func)).id
+				if name not in self.function.variables:
+					raise self._syntax(node.value.func, 'undefined function')
+				size = self.functions[name].returns
 			else:
 				size = 1
 
