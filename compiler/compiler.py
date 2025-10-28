@@ -86,7 +86,8 @@ class ConstantDigger(ast.NodeVisitor):
 		value = node.value
 		if not isinstance(value, int):
 			raise ValueError('only int values are supported', node)
-		self.append(value, node)
+		# NOTE: bool type isinstance of int but Cython is deliberately stricter than PEP-484 and rejects subclasses of builtin types.
+		self.append(int(value), node)
 
 	def visit_BinOp(self, node: ast.BinOp) -> None:
 		"""
