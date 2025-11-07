@@ -38,6 +38,11 @@ def output(action: Action) -> None:
 	builtins.print(f"OUT: {action.name}")
 
 
+# noinspection PyShadowingBuiltins
+def input() -> int:
+	return 0
+
+
 def get_tick() -> int:
 	return 0
 
@@ -58,13 +63,24 @@ def get_weekday(timezone_offset: int) -> int:
 	return 0
 
 
-def sh_get_entry_timer() -> int:
-	return int(input(f"Provide entry current entry timer: "))
+def sh_get_alarm_timer() -> Tuple[int, Action]:
+	"""
+	Retrieves the current alarm timer value and its associated action.
+
+	:return: A tuple containing:
+	         - int: The alarm timer seconds to timeout or 0 if not active.
+	         - Action: The action associated with the alarm, values are:
+			   - Action.ACTION_OFF: No action/timer inactive.
+			   - Action.ACTION_EXIT: Exit delay timer active.
+			   - Action.ACTION_ENTRY: Entry delay timer active.
+			   - Action.ACTION_ALARM: Alarm timer active.
+	"""
+	return 0, Action.ACTION_ALARM
 
 
-def sh_get_exit_timer() -> int:
-	return int(input(f"Provide entry current exit timer: "))
+def sh_get_panic_timer() -> int:
+	return 0
 
 
-def sh_section_state(section_number: int) -> AlarmState:
+def sh_get_section_state(section_number: int) -> AlarmState:
 	return AlarmState(input(f"Provide section state for section {section_number}: "))

@@ -23,6 +23,9 @@ BUILTIN_FUNCTIONS:
   output:
     args: ['action']
     rets: 0
+  input:
+    args: []
+    rets: 1
   get_tick:
     args: []
     rets: 1
@@ -38,12 +41,12 @@ BUILTIN_FUNCTIONS:
   get_weekday:
     args: ['timezone_offset']
     rets: 1
-  sh_get_entry_timer:
+  sh_get_alarm_timer:
+    args: []
+    rets: 2
+  sh_get_panic_timer:
     args: []
     rets: 1
-  sh_get_exit_timer:
-    args: []
-    rets: 1
-  sh_section_state:
+  sh_get_section_state:
     args: ['section_number']
     rets: 1
