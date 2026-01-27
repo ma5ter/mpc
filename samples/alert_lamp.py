@@ -49,8 +49,13 @@ def main():
 	# Main loop for continuous operation of the alert lamp.
 	while True:
 		action = Action.ACTION_OFF
-		# Determine the aggregated state of the monitored sections.
-		state = accumulated_state()
+
+		# First check the panic timer
+		if sh_get_panic_timer() > 0:
+			state = AlarmState.ALARMING
+		else:
+			# Determine the aggregated state of the monitored sections.
+			state = accumulated_state()
 
 		# If any monitored section is actually alarming, use the 'ALARM' action, but limit the overall time.
 		if state == AlarmState.ALARMING:
