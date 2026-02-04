@@ -24,6 +24,13 @@ class Action(Enum):
 	ACTION__ONCE = 0x80
 
 
+class RimVariableType(Enum):
+	RIM_VARIABLE_BATTERY = 0
+	RIM_VARIABLE_TEMPERATURE = 1
+	RIM_VARIABLE_RSSI = 2
+	RIM_VARIABLE_TEMPERATURE2 = 3
+
+
 # noinspection PyShadowingBuiltins
 def print(*x: int | Enum) -> None:
 	builtins.print(*x)
@@ -36,11 +43,6 @@ def sleep(milliseconds: int) -> None:
 
 def output(action: Action) -> None:
 	builtins.print(f"OUT: {action.name}")
-
-
-# noinspection PyShadowingBuiltins
-def input() -> int:
-	return 0
 
 
 def get_tick() -> int:
@@ -84,3 +86,40 @@ def sh_get_panic_timer() -> int:
 
 def sh_get_section_state(section_number: int) -> AlarmState:
 	return AlarmState(input(f"Provide section state for section {section_number}: "))
+
+
+def sh_get_zone_sensor(zone_number: int) -> int:
+	"""
+	Retrieves the current zone sensor mask value
+	:param zone_number: number of the zone starting from 1
+	:return: a bitmask of the following flags:
+			- SENSOR_AFFECT_ALARM = 0
+			- SENSOR_AFFECT_ATTENTION = 1
+			- SENSOR_AFFECT_MALFUNCTION = 2
+			- SENSOR_AFFECT_BREACH = 3
+			- SENSOR_AFFECT_BATTERY = 4
+			- SENSOR_AFFECT_BATTERY2 = 5
+			- SENSOR_AFFECT_LOST = 6
+			- SENSOR_AFFECT_PHYALARM = 7
+			- SENSOR_STATE_ENTRY_DELAY = 8
+			- SENSOR_STATE_EXIT_DELAY = 9
+			- SENSOR_STATE_TIMEOUT = 10
+			- SENSOR_STATE_LOWTEMP = 11
+			- SENSOR_STATE_HIGHTEMP = 12
+			- SENSOR_STATE_BYPASS = 13
+	"""
+	return int(input(f"Provide sensor flags state for zone {zone_number}: "))
+
+
+def sh_get_zone_rim_variables(zone_number: int, variable_type: RimVariableType) -> int:
+	"""
+	Retrieves the current zone variables associated with a RI-M sensor
+	:param zone_number: number of the zone starting from 1
+	:param variable_type: one of:
+			- RIM_VARIABLE_BATTERY = 0
+			- RIM_VARIABLE_TEMPERATURE = 1
+			- RIM_VARIABLE_RSSI = 2
+			- RIM_VARIABLE_TEMPERATURE2 = 3
+	:return: a variable value
+	"""
+	return int(input(f"Provide RI-M sensor variable {variable_type} for zone {zone_number}: "))
